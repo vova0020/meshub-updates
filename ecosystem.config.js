@@ -9,7 +9,9 @@ module.exports = {
     max_memory_restart: '500M',
     env: {
       NODE_ENV: 'production',
-      PORT: 3100
+      PORT: 3100,
+      ADMIN_USERNAME: 'vova',
+      ADMIN_PASSWORD: '31128422PVG!'
     },
     error_file: './logs/err.log',
     out_file: './logs/out.log',
