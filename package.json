@@ -5,7 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop meshub-updates",
+    "pm2:restart": "pm2 restart meshub-updates",
+    "pm2:logs": "pm2 logs meshub-updates",
+    "pm2:monit": "pm2 monit"
   },
   "keywords": ["updates", "distribution", "meshub"],
   "author": "",
