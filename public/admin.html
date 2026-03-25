@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель управления обновлениями</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .header h1 { font-size: 24px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { padding: 12px 24px; background: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        .tab.active { background: #3498db; color: white; }
+        .tab:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .content { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .upload-section { display: none; }
+        .upload-section.active { display: block; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; transition: border 0.3s; }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #3498db; }
+        .form-group textarea { min-height: 100px; resize: vertical; font-family: inherit; }
+        .file-input { border: 2px dashed #3498db; padding: 40px; text-align: center; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .file-input:hover { background: #f0f8ff; }
+        .file-input input { display: none; }
+        .file-name { margin-top: 10px; color: #27ae60; font-weight: 600; }
+        .btn { padding: 12px 30px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.3s; }
+        .btn:hover { background: #229954; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .btn:disabled { background: #95a5a6; cursor: not-allowed; transform: none; }
+        .versions { margin-top: 30px; }
+        .version-item { background: #f8f9fa; padding: 15px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid #3498db; }
+        .version-item h3 { color: #2c3e50; margin-bottom: 5px; }
+        .version-item p { color: #7f8c8d; font-size: 14px; }
+        .alert { padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .progress { display: none; margin-top: 20px; }
+        .progress-bar { width: 100%; height: 30px; background: #e0e0e0; border-radius: 15px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #3498db, #2ecc71); transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Панель управления обновлениями MES Hub</h1>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('backend')">Backend</button>
+            <button class="tab" onclick="switchTab('frontend')">Frontend</button>
+            <button class="tab" onclick="switchTab('goservice')">Go Service</button>
+        </div>
+
+        <div class="content">
+            <div id="alert"></div>
+
+            <!-- Backend Upload -->
+            <div class="upload-section active" id="backend">
+                <h2>Загрузка Backend обновления</h2>
+                <p style="color: #7f8c8d; margin-bottom: 20px;">Загрузите ZIP архив со структурой: mes-backend-windows.exe, package.json, prisma/, uploads/</p>
+                <form onsubmit="uploadUpdate(event, 'backend')">
+                    <div class="form-group">
+                        <label>Версия *</label>
+                        <input type="text" name="version" placeholder="1.0.0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Описание изменений *</label>
+                        <textarea name="changelog" placeholder="- Исправлена ошибка&#10;- Добавлена новая функция" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>ZIP архив Backend *</label>
+                        <div class="file-input" onclick="document.getElementById('backend-file').click()">
+                            <input type="file" id="backend-file" name="file" accept=".zip" required onchange="showFileName(this, 'backend')">
+                            <div>📁 Нажмите для выбора файла</div>
+                            <div class="file-name" id="backend-filename"></div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Загрузить Backend</button>
+                </form>
+                <div class="progress" id="backend-progress">
+                    <div class="progress-bar"><div class="progress-fill" id="backend-progress-fill">0%</div></div>
+                </div>
+                <div class="versions" id="backend-versions"></div>
+            </div>
+
+            <!-- Frontend Upload -->
+            <div class="upload-section" id="frontend">
+                <h2>Загрузка Frontend обновления</h2>
+                <p style="color: #7f8c8d; margin-bottom: 20px;">Загрузите ZIP архив со структурой: src/, public/, package.json, vite.config.ts, index.html</p>
+                <form onsubmit="uploadUpdate(event, 'frontend')">
+                    <div class="form-group">
+                        <label>Версия *</label>
+                        <input type="text" name="version" placeholder="1.0.0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Описание изменений *</label>
+                        <textarea name="changelog" placeholder="- Обновлен дизайн&#10;- Улучшена производительность" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>ZIP архив Frontend *</label>
+                        <div class="file-input" onclick="document.getElementById('frontend-file').click()">
+                            <input type="file" id="frontend-file" name="file" accept=".zip" required onchange="showFileName(this, 'frontend')">
+                            <div>📁 Нажмите для выбора файла</div>
+                            <div class="file-name" id="frontend-filename"></div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Загрузить Frontend</button>
+                </form>
+                <div class="progress" id="frontend-progress">
+                    <div class="progress-bar"><div class="progress-fill" id="frontend-progress-fill">0%</div></div>
+                </div>
+                <div class="versions" id="frontend-versions"></div>
+            </div>
+
+            <!-- Go Service Upload -->
+            <div class="upload-section" id="goservice">
+                <h2>Загрузка Go Service обновления</h2>
+                <p style="color: #7f8c8d; margin-bottom: 20px;">Загрузите EXE файл Go Service (meshub-service.exe)</p>
+                <form onsubmit="uploadUpdate(event, 'goservice')">
+                    <div class="form-group">
+                        <label>Версия *</label>
+                        <input type="text" name="version" placeholder="1.0.0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Описание изменений *</label>
+                        <textarea name="changelog" placeholder="- Оптимизирована работа&#10;- Добавлена поддержка новых функций" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Файл бинарника (meshub-service.exe) *</label>
+                        <div class="file-input" onclick="document.getElementById('goservice-file').click()">
+                            <input type="file" id="goservice-file" name="file" accept=".exe" required onchange="showFileName(this, 'goservice')">
+                            <div>📁 Нажмите для выбора файла</div>
+                            <div class="file-name" id="goservice-filename"></div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Загрузить Go Service</button>
+                </form>
+                <div class="progress" id="goservice-progress">
+                    <div class="progress-bar"><div class="progress-fill" id="goservice-progress-fill">0%</div></div>
+                </div>
+                <div class="versions" id="goservice-versions"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.upload-section').forEach(s => s.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab).classList.add('active');
+            loadVersions(tab);
+        }
+
+        function showFileName(input, type) {
+            const fileName = input.files[0]?.name || '';
+            document.getElementById(`${type}-filename`).textContent = fileName ? `✓ ${fileName}` : '';
+        }
+
+        function showAlert(message, type = 'success') {
+            const alert = document.getElementById('alert');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            setTimeout(() => alert.textContent = '', 5000);
+        }
+
+        async function uploadUpdate(event, type) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const btn = form.querySelector('.btn');
+            const progress = document.getElementById(`${type}-progress`);
+            const progressFill = document.getElementById(`${type}-progress-fill`);
+
+            btn.disabled = true;
+            progress.style.display = 'block';
+
+            try {
+                const xhr = new XMLHttpRequest();
+                
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        progressFill.style.width = percent + '%';
+                        progressFill.textContent = percent + '%';
+                    }
+                });
+
+                xhr.addEventListener('load', () => {
+                    if (xhr.status === 200) {
+                        showAlert(`✓ ${type.toUpperCase()} успешно загружен!`, 'success');
+                        form.reset();
+                        document.getElementById(`${type}-filename`).textContent = '';
+                        loadVersions(type);
+                    } else {
+                        showAlert(`Ошибка загрузки: ${xhr.responseText}`, 'error');
+                    }
+                    btn.disabled = false;
+                    progress.style.display = 'none';
+                    progressFill.style.width = '0%';
+                });
+
+                xhr.addEventListener('error', () => {
+                    showAlert('Ошибка сети при загрузке', 'error');
+                    btn.disabled = false;
+                    progress.style.display = 'none';
+                });
+
+                xhr.open('POST', `/api/upload/${type}`);
+                xhr.send(formData);
+
+            } catch (error) {
+                showAlert('Ошибка: ' + error.message, 'error');
+                btn.disabled = false;
+                progress.style.display = 'none';
+            }
+        }
+
+        async function loadVersions(type) {
+            try {
+                const response = await fetch(`/api/versions/${type}`);
+                const versions = await response.json();
+                const container = document.getElementById(`${type}-versions`);
+                
+                if (versions.length === 0) {
+                    container.innerHTML = '<p style="color: #7f8c8d;">Нет загруженных версий</p>';
+                    return;
+                }
+
+                container.innerHTML = '<h3 style="margin-bottom: 15px;">Загруженные версии:</h3>' +
+                    versions.map(v => `
+                        <div class="version-item">
+                            <h3>Версия ${v.version}</h3>
+                            <p>${v.changelog}</p>
+                            <p style="margin-top: 5px; font-size: 12px;">Загружено: ${new Date(v.releaseDate).toLocaleString('ru-RU')}</p>
+                        </div>
+                    `).join('');
+            } catch (error) {
+                console.error('Ошибка загрузки версий:', error);
+            }
+        }
+
+        // Загрузка версий при старте
+        loadVersions('backend');
+    </script>
+</body>
+</html>

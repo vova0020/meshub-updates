@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MES Hub - Update Manager</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #2563EB;
+            --success: #16A34A;
+            --danger: #DC2626;
+            --warning: #D97706;
+            --bg: #F4F5F7;
+            --surface: #FFFFFF;
+            --border: #E3E6EB;
+            --text: #0F172A;
+            --text-muted: #64748B;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            margin-bottom: -2px;
+        }
+        
+        .tab:hover {
+            color: var(--text);
+        }
+        
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        .file-upload {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .file-upload:hover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.02);
+        }
+        
+        .file-upload.dragover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.05);
+        }
+        
+        .file-upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .file-upload-text {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        .file-upload-text strong {
+            color: var(--primary);
+        }
+        
+        .file-list {
+            margin-top: 1rem;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: var(--bg);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .file-item-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .file-item-size {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+        
+        .file-item-remove {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1d4ed8;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #15803d;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .versions-list {
+            margin-top: 1.5rem;
+        }
+        
+        .version-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+        
+        .version-info h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .version-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .version-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .alert-success {
+            background: #F0FDF4;
+            color: var(--success);
+            border: 1px solid #BBF7D0;
+        }
+        
+        .alert-error {
+            background: #FFF1F2;
+            color: var(--danger);
+            border: 1px solid #FECDD3;
+        }
+        
+        .alert-info {
+            background: #EFF6FF;
+            color: var(--primary);
+            border: 1px solid #BFDBFE;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 MES Hub Update Manager</h1>
+        <p>Управление обновлениями Backend, Frontend и Go Service</p>
+    </div>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="backendVersions">0</div>
+                <div class="stat-label">Backend версий</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="frontendVersions">0</div>
+                <div class="stat-label">Frontend версий</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="serviceVersions">0</div>
+                <div class="stat-label">Service версий</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('backend')">Backend</button>
+            <button class="tab" onclick="switchTab('frontend')">Frontend</button>
+            <button class="tab" onclick="switchTab('service')">Go Service</button>
+        </div>
+
+        <!-- Backend Tab -->
+        <div id="backend-tab" class="tab-content active">
+            <div class="card">
+                <h2>📦 Загрузить новую версию Backend</h2>
+                
+                <div id="backend-alert"></div>
+                
+                <form id="backend-form" onsubmit="uploadBackend(event)">
+                    <div class="form-group">
+                        <label class="form-label">Версия (semver)</label>
+                        <input type="text" class="form-input" name="version" placeholder="1.0.1" required pattern="^\d+\.\d+\.\d+$">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Changelog</label>
+                        <textarea class="form-textarea" name="changelog" placeholder="- Исправлена ошибка...&#10;- Добавлена функция...&#10;- Улучшена производительность..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Файлы Backend</label>
+                        <div class="file-upload" id="backend-dropzone">
+                            <div class="file-upload-icon">📁</div>
+                            <div class="file-upload-text">
+                                <strong>Перетащите файлы сюда</strong> или кликните для выбора<br>
+                                <small>mes-backend-windows.exe, package.json, prisma/schema.prisma</small>
+                            </div>
+                            <input type="file" id="backend-files" multiple style="display: none;">
+                        </div>
+                        <div id="backend-file-list" class="file-list"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="requiresMigration"> Требуется миграция БД
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="breaking"> Breaking changes (несовместимые изменения)
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <span>⬆️ Загрузить Backend</span>
+                    </button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2>📋 Существующие версии Backend</h2>
+                <div id="backend-versions" class="versions-list"></div>
+            </div>
+        </div>
+
+        <!-- Frontend Tab -->
+        <div id="frontend-tab" class="tab-content">
+            <div class="card">
+                <h2>🎨 Загрузить новую версию Frontend</h2>
+                
+                <div id="frontend-alert"></div>
+                
+                <form id="frontend-form" onsubmit="uploadFrontend(event)">
+                    <div class="form-group">
+                        <label class="form-label">Версия (semver)</label>
+                        <input type="text" class="form-input" name="version" placeholder="1.0.1" required pattern="^\d+\.\d+\.\d+$">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Changelog</label>
+                        <textarea class="form-textarea" name="changelog" placeholder="- Новый дизайн...&#10;- Исправлены баги...&#10;- Добавлены компоненты..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Файлы Frontend (ZIP архив с src/)</label>
+                        <div class="file-upload" id="frontend-dropzone">
+                            <div class="file-upload-icon">📁</div>
+                            <div class="file-upload-text">
+                                <strong>Перетащите ZIP архив сюда</strong> или кликните для выбора<br>
+                                <small>frontend.zip (содержит src/, public/, package.json, vite.config.ts)</small>
+                            </div>
+                            <input type="file" id="frontend-files" accept=".zip" style="display: none;">
+                        </div>
+                        <div id="frontend-file-list" class="file-list"></div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <span>⬆️ Загрузить Frontend</span>
+                    </button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2>📋 Существующие версии Frontend</h2>
+                <div id="frontend-versions" class="versions-list"></div>
+            </div>
+        </div>
+
+        <!-- Service Tab -->
+        <div id="service-tab" class="tab-content">
+            <div class="card">
+                <h2>⚙️ Загрузить новую версию Go Service</h2>
+                
+                <div id="service-alert"></div>
+                
+                <form id="service-form" onsubmit="uploadService(event)">
+                    <div class="form-group">
+                        <label class="form-label">Версия (semver)</label>
+                        <input type="text" class="form-input" name="version" placeholder="1.0.1" required pattern="^\d+\.\d+\.\d+$">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Changelog</label>
+                        <textarea class="form-textarea" name="changelog" placeholder="- Улучшена стабильность...&#10;- Добавлена поддержка...&#10;- Исправлены ошибки..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Файл Go Service</label>
+                        <div class="file-upload" id="service-dropzone">
+                            <div class="file-upload-icon">📁</div>
+                            <div class="file-upload-text">
+                                <strong>Перетащите файл сюда</strong> или кликните для выбора<br>
+                                <small>meshub-service.exe</small>
+                            </div>
+                            <input type="file" id="service-files" accept=".exe" style="display: none;">
+                        </div>
+                        <div id="service-file-list" class="file-list"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="breaking"> Breaking changes (несовместимые изменения)
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <span>⬆️ Загрузить Go Service</span>
+                    </button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2>📋 Существующие версии Go Service</h2>
+                <div id="service-versions" class="versions-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

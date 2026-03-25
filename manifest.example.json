@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "releaseDate": "2024-01-01T10:00:00Z",
+  "changelog": "🎉 Первый релиз MES Hub!\n\n✨ Новые функции:\n- Управление производственными заказами\n- Мониторинг станков в реальном времени\n- Система управления пользователями\n- Интеграция с PostgreSQL\n\n🐛 Исправления:\n- Начальная версия\n\n📝 Примечания:\n- Требуется PostgreSQL 14+\n- Требуется Node.js 18+",
+  "files": [
+    {
+      "path": "mes-backend-windows.exe",
+      "size": 5242880,
+      "sha256": "example_hash_will_be_calculated",
+      "required": true
+    },
+    {
+      "path": "package.json",
+      "size": 512,
+      "sha256": "example_hash_will_be_calculated",
+      "required": true
+    },
+    {
+      "path": "prisma/schema.prisma",
+      "size": 4096,
+      "sha256": "example_hash_will_be_calculated",
+      "required": true,
+      "requiresMigration": false
+    }
+  ],
+  "minGoServiceVersion": "1.0.0",
+  "breaking": false,
+  "notes": "Первый стабильный релиз"
+}

@@ -1,0 +1,18 @@
+[Unit]
+Description=MES Hub Update Server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/meshub-updates
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=meshub-updates
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

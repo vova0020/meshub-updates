@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Updates storage (содержит большие файлы)
+updates/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
