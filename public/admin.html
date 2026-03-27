@@ -224,13 +224,13 @@
                 const versions = await response.json();
                 const container = document.getElementById(`${type}-versions`);
                 
-                if (versions.length === 0) {
+                if (versions.versions.length === 0) {
                     container.innerHTML = '<p style="color: #7f8c8d;">Нет загруженных версий</p>';
                     return;
                 }
 
                 container.innerHTML = '<h3 style="margin-bottom: 15px;">Загруженные версии:</h3>' +
-                    versions.map(v => `
+                    versions.versions.map(v => `
                         <div class="version-item">
                             <h3>Версия ${v.version}</h3>
                             <p>${v.changelog}</p>
