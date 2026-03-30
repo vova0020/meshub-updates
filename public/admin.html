@@ -30,9 +30,16 @@
         .btn:hover { background: #229954; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
         .btn:disabled { background: #95a5a6; cursor: not-allowed; transform: none; }
         .versions { margin-top: 30px; }
-        .version-item { background: #f8f9fa; padding: 15px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid #3498db; }
+        .version-item { background: #f8f9fa; padding: 15px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid #3498db; display: flex; justify-content: space-between; align-items: start; }
+        .version-info { flex: 1; }
         .version-item h3 { color: #2c3e50; margin-bottom: 5px; }
         .version-item p { color: #7f8c8d; font-size: 14px; }
+        .version-files { color: #95a5a6; font-size: 12px; margin-top: 5px; }
+        .btn-delete { padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.3s; margin-left: 8px; }
+        .btn-delete:hover { background: #c0392b; }
+        .btn-edit { padding: 8px 16px; background: #f39c12; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        .btn-edit:hover { background: #e67e22; }
+        .version-actions { display: flex; gap: 8px; }
         .alert { padding: 15px; border-radius: 6px; margin-bottom: 20px; }
         .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
@@ -232,13 +239,44 @@
                 container.innerHTML = '<h3 style="margin-bottom: 15px;">Загруженные версии:</h3>' +
                     versions.versions.map(v => `
                         <div class="version-item">
-                            <h3>Версия ${v.version}</h3>
-                            <p>${v.changelog}</p>
-                            <p style="margin-top: 5px; font-size: 12px;">Загружено: ${new Date(v.releaseDate).toLocaleString('ru-RU')}</p>
+                            <div class="version-info">
+                                <h3>Версия ${v.version}</h3>
+                                <p>${v.changelog}</p>
+                                <p class="version-files">Файлы: ${v.files?.join(', ') || 'нет данных'}</p>
+                                <p style="margin-top: 5px; font-size: 12px;">Загружено: ${new Date(v.releaseDate).toLocaleString('ru-RU')}</p>
+                            </div>
+                            <div class="version-actions">
+                                <button class="btn-edit" onclick="editVersion('${type}', '${v.version}', '${v.changelog}')">Изменить</button>
+                                <button class="btn-delete" onclick="deleteVersion('${type}', '${v.version}')">Удалить</button>
+                            </div>
                         </div>
                     `).join('');
             } catch (error) {
                 console.error('Ошибка загрузки версий:', error);
+            }
+        }
+
+        async function editVersion(type, version, changelog) {
+            const form = document.querySelector(`#${type} form`);
+            form.querySelector('[name="version"]').value = version;
+            form.querySelector('[name="changelog"]').value = changelog;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showAlert(`Редактирование версии ${version}. Загрузите новый файл и нажмите "Загрузить"`, 'success');
+        }
+
+        async function deleteVersion(type, version) {
+            if (!confirm(`Удалить версию ${version} компонента ${type}?`)) return;
+            
+            try {
+                const response = await fetch(`/api/versions/${type}/${version}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showAlert(`Версия ${version} удалена`, 'success');
+                    loadVersions(type);
+                } else {
+                    showAlert('Ошибка удаления', 'error');
+                }
+            } catch (error) {
+                showAlert('Ошибка: ' + error.message, 'error');
             }
         }
 

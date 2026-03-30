@@ -63,8 +63,9 @@ const UPDATES_DIR = process.env.UPDATES_DIR || path.join(__dirname, 'updates');
 // Multer для загрузки файлов
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const { type } = req.params;
+    let { type } = req.params;
     const { version } = req.body;
+    if (type === 'goservice') type = 'service';
     const dir = path.join(UPDATES_DIR, type, version);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
@@ -229,7 +230,7 @@ app.get('/api/download/:component/:version', (req, res) => {
 
 // API: Загрузка обновления
 app.post('/api/upload/:type', upload.single('file'), (req, res) => {
-  const { type } = req.params;
+  let { type } = req.params;
   const { version, changelog } = req.body;
   const file = req.file;
 
@@ -269,7 +270,8 @@ app.post('/api/upload/:type', upload.single('file'), (req, res) => {
 
 // API: Список всех версий
 app.get('/api/versions/:component', (req, res) => {
-  const { component } = req.params;
+  let { component } = req.params;
+  if (component === 'goservice') component = 'service';
   
   try {
     const componentDir = path.join(UPDATES_DIR, component);
@@ -281,10 +283,13 @@ app.get('/api/versions/:component', (req, res) => {
       .filter(v => fs.statSync(path.join(componentDir, v)).isDirectory())
       .map(v => {
         const manifest = readManifest(component, v);
+        const versionDir = path.join(componentDir, v);
+        const files = fs.readdirSync(versionDir).filter(f => f !== 'manifest.json');
         return {
           version: v,
           releaseDate: manifest?.releaseDate,
-          changelog: manifest?.changelog
+          changelog: manifest?.changelog,
+          files
         };
       })
       .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
@@ -293,6 +298,27 @@ app.get('/api/versions/:component', (req, res) => {
   } catch (error) {
     console.error('Error listing versions:', error);
     res.status(500).json({ error: 'Failed to list versions' });
+  }
+});
+
+// API: Удаление версии
+app.delete('/api/versions/:component/:version', basicAuth, (req, res) => {
+  let { component, version } = req.params;
+  if (component === 'goservice') component = 'service';
+  
+  try {
+    const versionDir = path.join(UPDATES_DIR, component, version);
+    if (!fs.existsSync(versionDir)) {
+      return res.status(404).json({ error: 'Version not found' });
+    }
+    
+    fs.rmSync(versionDir, { recursive: true, force: true });
+    console.log(`[DELETE] ${component} v${version} deleted`);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting version:', error);
+    res.status(500).json({ error: 'Failed to delete version' });
   }
 });
 
